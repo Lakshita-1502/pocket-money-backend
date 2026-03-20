@@ -6,3 +6,7 @@ router.post("/send-otp", sendOtp);
 router.post("/verify-otp", verifyOtp);
 
 module.exports = router;
+
+const { setPassword } = require("../controllers/authController");
+
+router.post("/set-password", setPassword);
