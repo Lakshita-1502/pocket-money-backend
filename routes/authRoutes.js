@@ -1,12 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const { sendOtp, verifyOtp } = require("../controllers/authController");
 
-router.post("/send-otp", sendOtp);
-router.post("/verify-otp", verifyOtp);
+const {
+  register,
+  login,
+} = require("../controllers/authController");
+
+const verifyFirebaseToken = require("../middleware/authMiddleware");
+
+// 🔐 Register (requires Firebase token)
+router.post("/register", verifyFirebaseToken, register);
+
+// 🔐 Login (password based)
+router.post("/login", login);
 
 module.exports = router;
-
-const { setPassword } = require("../controllers/authController");
-
-router.post("/set-password", setPassword);
