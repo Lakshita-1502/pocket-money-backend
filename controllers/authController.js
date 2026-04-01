@@ -7,6 +7,13 @@ exports.register = async (req, res) => {
     const { email, password } = req.body;
     const firebaseUser = req.firebaseUser;
 
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password required",
+      });
+    }
+
     const existingUser = await User.findOne({
       firebase_uid: firebaseUser.uid,
     });
@@ -25,8 +32,6 @@ exports.register = async (req, res) => {
       phone: firebaseUser.phone_number,
       email,
       password: hashedPassword,
-
-      // ✅ FLAGS
       isPhoneVerified: true,
       isEmailVerified: false,
       hasPassword: true,
@@ -35,16 +40,23 @@ exports.register = async (req, res) => {
 
     await user.save();
 
+    const nextStep = getNextStep(user);
+
     res.json({
       success: true,
       message: "User registered successfully",
-      isPhoneVerified: true,
-      isEmailVerified: false,
-      hasPassword: true,
+      data: {
+        id: user._id,
+        phone: user.phone,
+      },
+      nextStep,
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -54,16 +66,29 @@ exports.login = async (req, res) => {
   try {
     const { phone, password } = req.body;
 
+    if (!phone || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone and password are required",
+      });
+    }
+
     const user = await User.findOne({ phone });
 
     if (!user) {
-      return res.status(400).json({ message: "User not found" });
+      return res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid password" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password",
+      });
     }
 
     const token = jwt.sign(
@@ -72,17 +97,26 @@ exports.login = async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    const nextStep = getNextStep(user);
+
     res.json({
       success: true,
-      token,
-      user: {
-        id: user._id,
-        phone: user.phone,
+      message: "Login successful",
+      data: {
+        token,
+        user: {
+          id: user._id,
+          phone: user.phone,
+        },
       },
+      nextStep,
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -114,20 +148,35 @@ exports.emailVerified = async (req, res) => {
 
     await user.save();
 
+    const nextStep = getNextStep(user);
+
     res.json({
       success: true,
       message: "Email verified successfully",
+      data: {},
+      nextStep,
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
+//complete profile
 exports.completeProfile = async (req, res) => {
   try {
     const { name, dob, referralCode } = req.body;
     const userId = req.user.id;
+
+    if (!name || !dob) {
+      return res.status(400).json({
+        success: false,
+        message: "Name and DOB required",
+      });
+    }
 
     const user = await User.findById(userId);
 
@@ -138,25 +187,41 @@ exports.completeProfile = async (req, res) => {
 
     await user.save();
 
+    const nextStep = getNextStep(user);
+
     res.json({
       success: true,
       message: "Profile completed successfully",
+      data: {},
+      nextStep,
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
+//get profile
 exports.getProfile = async (req, res) => {
   try {
     const userId = req.user.id;
 
     const user = await User.findById(userId);
-
+    
+    // ✅ NULL CHECK (CORRECT PLACE)
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
     res.json({
       success: true,
-      user: {
+      message: "Profile fetched successfully",
+      data: {
         id: user._id,
         phone: user.phone,
         email: user.email,
@@ -169,6 +234,17 @@ exports.getProfile = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
+};
+
+const getNextStep = (user) => {
+  if (!user.isPhoneVerified) return "PHONE_VERIFICATION";
+  if (!user.hasPassword) return "SET_PASSWORD";
+  if (!user.isEmailVerified) return "VERIFY_EMAIL";
+  if (!user.isProfileComplete) return "COMPLETE_PROFILE";
+  return "HOME";
 };
