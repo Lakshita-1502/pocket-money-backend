@@ -27,4 +27,7 @@ router.post("/complete-profile", verifyJWT, completeProfile);
 // 🔐 Get profile
 router.get("/profile", verifyJWT, getProfile);
 
+const { resetPassword } = require("../controllers/authController");
+router.post("/reset-password", verifyFirebaseToken, resetPassword);
+
 module.exports = router;

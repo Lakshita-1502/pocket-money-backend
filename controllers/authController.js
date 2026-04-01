@@ -248,3 +248,39 @@ const getNextStep = (user) => {
   if (!user.isProfileComplete) return "COMPLETE_PROFILE";
   return "HOME";
 };
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const firebaseUser = req.firebaseUser;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    const user = await User.findOne({
+      firebase_uid: firebaseUser.uid,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Password reset successful",
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
