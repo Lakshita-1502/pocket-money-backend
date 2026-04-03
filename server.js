@@ -8,7 +8,7 @@ connectDB();
 const app = express();
 app.use(express.json());
 
-const authRoutes = require("./routes/authRoutes");
-app.use("/auth", authRoutes);
+app.use("/auth", require("./routes/authRoutes"));
+app.use("/user", require("./routes/userRoutes"));
 
 app.listen(8000, () => console.log("Server running on port 8000"));
