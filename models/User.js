@@ -1,23 +1,5 @@
 const mongoose = require("mongoose");
 
-<<<<<<< Updated upstream
-const userSchema = new mongoose.Schema({
-  firebase_uid: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  phone: {
-    type: String,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-=======
 const userSchema = new mongoose.Schema(
   {
     firebase_uid: {
@@ -26,15 +8,19 @@ const userSchema = new mongoose.Schema(
       unique: true,
     },
 
-    phone: String,
+    phone: {
+      type: String,
+    },
 
     email: {
       type: String,
       unique: true,
-      sparse: true,
+      sparse: true, // allows null values
     },
 
-    password: String,
+    password: {
+      type: String,
+    },
 
     isPhoneVerified: {
       type: Boolean,
@@ -56,12 +42,19 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
-    name: String,
-    dob: Date,
-    referralCode: String,
->>>>>>> Stashed changes
+    name: {
+      type: String,
+    },
+
+    dob: {
+      type: Date,
+    },
+
+    referralCode: {
+      type: String,
+    },
   },
-  { timestamps: true }
+  { timestamps: true } // replaces createdAt
 );
 
 module.exports = mongoose.model("User", userSchema);

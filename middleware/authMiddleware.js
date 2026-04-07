@@ -1,11 +1,8 @@
 const admin = require("../config/firebase");
+const jwt = require("jsonwebtoken");
 
-<<<<<<< Updated upstream
+// 🔥 Firebase Token Middleware
 const verifyFirebaseToken = async (req, res, next) => {
-=======
-// Firebase Token
-exports.verifyFirebaseToken = async (req, res, next) => {
->>>>>>> Stashed changes
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
@@ -22,11 +19,8 @@ exports.verifyFirebaseToken = async (req, res, next) => {
   }
 };
 
-<<<<<<< Updated upstream
-module.exports = verifyFirebaseToken;
-=======
-// JWT Token
-exports.verifyJWT = (req, res, next) => {
+// 🔐 JWT Token Middleware
+const verifyJWT = (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
 
@@ -42,4 +36,9 @@ exports.verifyJWT = (req, res, next) => {
     res.status(401).json({ message: "Invalid token" });
   }
 };
->>>>>>> Stashed changes
+
+// ✅ Export both
+module.exports = {
+  verifyFirebaseToken,
+  verifyJWT,
+};
