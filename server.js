@@ -10,5 +10,6 @@ app.use(express.json());
 
 app.use("/auth", require("./routes/authRoutes"));
 app.use("/user", require("./routes/userRoutes"));
+app.use("/api/wallet", require("./routes/walletRoutes"));
 
 app.listen(8000, () => console.log("Server running on port 8000"));
